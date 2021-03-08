@@ -28,26 +28,49 @@ def get_auth():
         return False
 
 
-def get_elasticubes():
+def get_elasticubes(extract=True, live=True):
     """
-    Returns every standard elasticube the user has access to BUT NOT live models.
+    Returns every standard elasticube the user has access to if called as simply get_elasticubes().
+    If extract is set to False, returns only live models.
+    If live is set to False, returns only extract models.
     """
     token = get_auth()
     
     if token:
-        url = config.base_url + "/api/v1/elasticubes/getElasticubes"
-        headers = {
-            'Accept': 'application/json',
-            'Authorization': token
-            }
-        cube_response = requests.request("GET", url, headers=headers)
-        if cube_response.status_code == 200:
-            return cube_response.json()
-        else:
-            print("Status code " + str(cube_response.status_code) + "; cubes not fetched.")
-            return []
+
+        cubes = []
+        
+        if extract == True:
+            url = config.base_url + "/api/v1/elasticubes/getElasticubes"
+            headers = {
+                'Accept': 'application/json',
+                'Authorization': token
+                }
+            extract_response = requests.request("GET", url, headers=headers)
+            if extract_response.status_code == 200:
+                cubes.extend(extract_response.json())
+            else:
+                print("Status code " + str(extract_response.status_code) + "; cubes not fetched.")
+                return []
+
+        if live == True:
+            url = config.base_url + "/api/v1/elasticubes/live"
+            headers = {
+                'Accept': 'application/json',
+                'Authorization': token
+                }
+            live_response = requests.request("GET", url, headers=headers)
+            if live_response.status_code == 200:
+                cubes.extend(live_response.json())
+            else:
+                print("Status code " + str(live_response.status_code) + "; cubes not fetched.")
+                return []
+
+        return cubes
+        
     else:
         return []
+
 
 
 def get_smodel(cube_name, target_directory, oid=None):
